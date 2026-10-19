@@ -1,0 +1,216 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Checkout | M.STORE</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background: #0d0c0f;
+      color: #f7f1e8;
+      font-family: Arial, sans-serif;
+    }
+    .checkout {
+      max-width: 950px;
+      margin: 35px auto;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    .panel {
+      padding: 24px;
+      background: #171419;
+      border: 1px solid #4a304f;
+      border-radius: 12px;
+    }
+    h1, h2 { color: #d6b77a; }
+    label { display: block; margin-top: 17px; }
+    input, textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      margin-top: 7px;
+      background: #0d0c0f;
+      color: #f7f1e8;
+      border: 1px solid #57485a;
+      border-radius: 6px;
+      font: inherit;
+    }
+    textarea { min-height: 100px; resize: vertical; }
+    button {
+      width: 100%;
+      padding: 13px;
+      margin-top: 22px;
+      border: 0;
+      border-radius: 6px;
+      background: #d6b77a;
+      color: #0d0c0f;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:disabled { opacity: .6; cursor: wait; }
+    .summary-row {
+      padding: 12px 0;
+      border-bottom: 1px solid #4a304f;
+    }
+    #message { color: #d6b77a; }
+    @media (max-width: 650px) {
+      .checkout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <p style="margin:24px"><a href="/cart.html">← Back to Cart</a></p>
+
+  <main class="checkout">
+    <section class="panel">
+      <h1>Delivery Details</h1>
+      <form id="orderForm">
+        <label for="name">Full Name</label>
+        <input id="name" name="name" required maxlength="80"
+          minlength="2" autocomplete="name">
+
+        <label for="phone">Mobile Number</label>
+        <input id="phone" name="phone" type="tel" required
+          pattern="[0-9]{10}" maxlength="10" inputmode="numeric"
+          autocomplete="tel" placeholder="10-digit mobile number">
+
+        <label for="address">Complete Delivery Address</label>
+        <textarea id="address" name="address" required
+          minlength="5" maxlength="300"
+          autocomplete="street-address"></textarea>
+
+        <button id="placeOrder" type="submit">Place Order</button>
+        <p id="message" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>Order Summary</h2>
+      <div id="summary"></div>
+      <h2 id="total">Total: ₹0</h2>
+    </section>
+  </main>
+
+  <script>
+    const cartKey = "codealphaCart";
+    const form = document.getElementById("orderForm");
+    const button = document.getElementById("placeOrder");
+    const message = document.getElementById("message");
+    const summary = document.getElementById("summary");
+    const totalElement = document.getElementById("total");
+
+    let cart = [];
+
+    try {
+      const savedCart = JSON.parse(localStorage.getItem(cartKey) || "[]");
+      cart = Array.isArray(savedCart) ? savedCart : [];
+    } catch {
+      cart = [];
+    }
+
+    function formatPrice(value) {
+      return "₹" + Number(value).toLocaleString("en-IN");
+    }
+
+    function getQuantity(item) {
+      const quantity = Number(item.quantity);
+      return Number.isInteger(quantity) && quantity > 0 ? quantity : 1;
+    }
+
+    function renderCart() {
+      if (!cart.length) {
+        summary.textContent = "Your cart is empty. Please add products first.";
+        button.disabled = true;
+        return;
+      }
+
+      summary.replaceChildren();
+
+      cart.forEach(item => {
+        const row = document.createElement("div");
+        row.className = "summary-row";
+        row.textContent =
+          `${item.icon || "🛍️"} ${item.name || "Product"} × ${getQuantity(item)} — ` +
+          formatPrice(Number(item.price) * getQuantity(item));
+        summary.appendChild(row);
+      });
+
+      const total = cart.reduce(
+        (sum, item) => sum + Number(item.price) * getQuantity(item), 0
+      );
+      totalElement.textContent = "Total: " + formatPrice(total);
+    }
+
+    renderCart();
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+
+      if (!cart.length || button.disabled) return;
+      if (!form.reportValidity()) return;
+
+      button.disabled = true;
+      button.textContent = "Placing Order...";
+      message.textContent = "Saving your order...";
+
+      try {
+        const response = await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({
+            customer: {
+              name: document.getElementById("name").value.trim(),
+              phone: document.getElementById("phone").value.trim(),
+              address: document.getElementById("address").value.trim()
+            },
+            items: cart.map(item => ({
+              id: Number(item.id),
+              quantity: getQuantity(item)
+            }))
+          })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || "Could not save your order.");
+        }
+
+        // Build the confirmation using the server's actual response.
+        const confirmedOrder = {
+          orderNumber: result.orderNumber,
+          total: result.total,
+          name: document.getElementById("name").value.trim(),
+          phone: document.getElementById("phone").value.trim(),
+          address: document.getElementById("address").value.trim(),
+          items: result.items.map(item => ({
+            name: item.name,
+            price: Number(item.price),
+            quantity: Number(item.quantity),
+            subtotal: Number(item.price) * Number(item.quantity)
+          }))
+        };
+
+        sessionStorage.setItem(
+          "codealphaLastOrder",
+          JSON.stringify(confirmedOrder)
+        );
+
+        localStorage.removeItem(cartKey);
+        window.location.href = "/order-success.html";
+      } catch (error) {
+        message.textContent =
+          (error.message || "Unable to place the order.") +
+          " Please check your details and try again.";
+        button.disabled = false;
+        button.textContent = "Place Order";
+      }
+    });
+  </script>
+</body>
+</html>

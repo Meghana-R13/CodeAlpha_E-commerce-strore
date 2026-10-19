@@ -1,0 +1,197 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders | M.STORE</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f7f1e8;
+      color: #28231f;
+    }
+
+    header {
+      background: #0d0c0f;
+      color: #d6b77a;
+      padding: 22px 7%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    header h2 {
+      margin: 0;
+    }
+
+    header a {
+      color: #d6b77a;
+      text-decoration: none;
+    }
+
+    main {
+      max-width: 850px;
+      margin: 35px auto;
+      padding: 0 18px;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+    }
+
+    #message {
+      line-height: 1.6;
+    }
+
+    .order {
+      background: white;
+      border-radius: 12px;
+      padding: 22px;
+      margin: 20px 0;
+      box-shadow: 0 4px 15px #0000000d;
+    }
+
+    .order h3 {
+      margin-top: 0;
+      color: #8d5b35;
+    }
+
+    .order p {
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+
+    .total {
+      font-size: 19px;
+      font-weight: bold;
+      border-top: 1px solid #eee;
+      padding-top: 12px;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 11px 17px;
+      border-radius: 7px;
+      background: #0d0c0f;
+      color: #d6b77a;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      margin: 5px 5px 5px 0;
+    }
+
+    .empty {
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h2>M.STORE</h2>
+    <nav>
+      <a href="/">Home</a> &nbsp; | &nbsp;
+      <a href="/Products.html">Products</a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>My Orders</h1>
+    <p>View your previous orders and order details.</p>
+
+    <div id="message">Loading your orders...</div>
+    <div id="orders"></div>
+  </main>
+
+  <script>
+    async function loadOrders() {
+      const message = document.getElementById("message");
+      const ordersContainer = document.getElementById("orders");
+
+      try {
+        const response = await fetch("/api/my-orders", {
+          credentials: "same-origin"
+        });
+
+        const data = await response.json();
+
+        if (response.status === 401) {
+          message.innerHTML = `
+            <div class="empty">
+              <p>Please log in to view your orders.</p>
+              <a class="btn" href="/login.html">Login</a>
+            </div>
+          `;
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(data.message || "Could not load orders.");
+        }
+
+        const orders = data.orders || [];
+        message.textContent = "";
+
+        if (orders.length === 0) {
+          ordersContainer.innerHTML = `
+            <div class="empty">
+              <h3>No orders yet</h3>
+              <p>Orders you place while logged in will appear here.</p>
+              <a class="btn" href="/">Start Shopping</a>
+            </div>
+          `;
+          return;
+        }
+
+        ordersContainer.innerHTML = orders.map(order => {
+          const items = (order.items || []).map(item => `
+            <p>
+              ${escapeHTML(item.name)} × ${Number(item.quantity)}
+              — ₹${(Number(item.price) * Number(item.quantity)).toFixed(2)}
+            </p>
+          `).join("");
+
+          return `
+            <section class="order">
+              <h3>Order ${escapeHTML(order.orderNumber)}</h3>
+              <p><strong>Date:</strong> ${escapeHTML(order.created_at)}</p>
+              <p><strong>Delivery name:</strong> ${escapeHTML(order.customer_name)}</p>
+              <p><strong>Phone:</strong> ${escapeHTML(order.phone)}</p>
+              <p><strong>Address:</strong> ${escapeHTML(order.address)}</p>
+              <h4>Items</h4>
+              ${items}
+              <p class="total">Total: ₹${Number(order.total).toFixed(2)}</p>
+            </section>
+          `;
+        }).join("");
+      } catch (error) {
+        message.textContent = error.message;
+      }
+    }
+
+    function escapeHTML(value) {
+      return String(value ?? "").replace(/[&<>"']/g, character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      })[character]);
+    }
+
+    loadOrders();
+  </script>
+</body>
+</html>

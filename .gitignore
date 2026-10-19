@@ -1,0 +1,10 @@
+
+node_modules/
+.vscode/
+ecommerce.db
+ecommerce.db-shm
+ecommerce.db-wal
+*.db-journal
+.env
+.env.*
+!.env.example

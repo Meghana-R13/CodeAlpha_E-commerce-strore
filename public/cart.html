@@ -1,0 +1,280 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Cart | M.STORE</title>
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    body {
+      background: #0d0c0f;
+      color: #f7f1e8;
+      font-family: Arial, sans-serif;
+    }
+
+    .cart-container {
+      max-width: 1000px;
+      margin: 40px auto;
+      padding: 24px;
+    }
+
+    .cart-container h1 {
+      color: #d6b77a;
+      margin-bottom: 25px;
+    }
+
+    .cart-item {
+      display: grid;
+      grid-template-columns: 65px 1fr auto;
+      align-items: center;
+      gap: 18px;
+      padding: 20px 0;
+      border-bottom: 1px solid #4a304f;
+    }
+
+    .product-icon {
+      font-size: 38px;
+      text-align: center;
+    }
+
+    .product-name {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .product-price {
+      color: #d6b77a;
+      font-size: 16px;
+    }
+
+    .quantity-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .quantity-controls button {
+      padding: 8px 12px;
+      border: 0;
+      border-radius: 5px;
+      cursor: pointer;
+      background: #d6b77a;
+      color: #0d0c0f;
+      font-weight: bold;
+    }
+
+    .quantity {
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .remove-button {
+      background: #4a304f !important;
+      color: white !important;
+    }
+
+    .cart-summary {
+      text-align: right;
+      margin-top: 30px;
+    }
+
+    .cart-summary h2 {
+      color: #d6b77a;
+    }
+
+    .checkout-button,
+    .continue-button {
+      display: inline-block;
+      margin-top: 12px;
+      padding: 13px 20px;
+      border: 0;
+      border-radius: 6px;
+      background: #d6b77a;
+      color: #0d0c0f;
+      text-decoration: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .empty-cart {
+      padding: 30px 0;
+      font-size: 18px;
+    }
+
+    @media (max-width: 600px) {
+      .cart-item {
+        grid-template-columns: 45px 1fr;
+      }
+
+      .quantity-controls {
+        grid-column: 2;
+      }
+
+      .cart-summary {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="cart-container">
+    <h1>🛒 Your Shopping Cart</h1>
+
+    <div id="cartItems"></div>
+
+    <div class="cart-summary">
+      <h2 id="cartTotal">Total: ₹0</h2>
+      <button id="checkoutButton" class="checkout-button">
+        Proceed to Checkout
+      </button>
+    </div>
+
+    <p>
+      <a class="continue-button" href="/">← Continue Shopping</a>
+    </p>
+  </main>
+
+  <script>
+    const CART_KEY = "codealphaCart";
+
+    function getCart() {
+      try {
+        const data = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
+        return Array.isArray(data) ? data : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function saveCart(cart) {
+      localStorage.setItem(CART_KEY, JSON.stringify(cart));
+    }
+
+    function formatPrice(value) {
+      return "₹" + Number(value || 0).toLocaleString("en-IN");
+    }
+
+    function renderCart() {
+      const cart = getCart();
+      const container = document.getElementById("cartItems");
+      const totalElement = document.getElementById("cartTotal");
+      const checkoutButton = document.getElementById("checkoutButton");
+
+      container.replaceChildren();
+
+      if (cart.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "empty-cart";
+        empty.textContent = "Your cart is empty 🛍️";
+        container.appendChild(empty);
+
+        totalElement.textContent = "Total: ₹0";
+        checkoutButton.disabled = true;
+        checkoutButton.style.opacity = "0.5";
+        return;
+      }
+
+      checkoutButton.disabled = false;
+      checkoutButton.style.opacity = "1";
+
+      let total = 0;
+
+      cart.forEach((item, index) => {
+        const price = Number(item.price) || 0;
+        const quantity = Math.max(1, Number(item.quantity) || 1);
+        total += price * quantity;
+
+        const row = document.createElement("div");
+        row.className = "cart-item";
+
+        const icon = document.createElement("div");
+        icon.className = "product-icon";
+        icon.textContent = item.icon || "🛍️";
+
+        const details = document.createElement("div");
+
+        const name = document.createElement("div");
+        name.className = "product-name";
+        name.textContent = item.name || item.title || "Product";
+
+        const priceText = document.createElement("div");
+        priceText.className = "product-price";
+        priceText.textContent = formatPrice(price) + " each";
+
+        const lineTotal = document.createElement("div");
+        lineTotal.style.marginTop = "8px";
+        lineTotal.textContent = "Subtotal: " + formatPrice(price * quantity);
+
+        details.append(name, priceText, lineTotal);
+
+        const controls = document.createElement("div");
+        controls.className = "quantity-controls";
+
+        const minus = document.createElement("button");
+        minus.textContent = "−";
+        minus.setAttribute("aria-label", "Decrease quantity");
+        minus.onclick = () => updateQuantity(index, -1);
+
+        const quantityText = document.createElement("span");
+        quantityText.className = "quantity";
+        quantityText.textContent = quantity;
+
+        const plus = document.createElement("button");
+        plus.textContent = "+";
+        plus.setAttribute("aria-label", "Increase quantity");
+        plus.onclick = () => updateQuantity(index, 1);
+
+        const remove = document.createElement("button");
+        remove.className = "remove-button";
+        remove.textContent = "Remove";
+        remove.onclick = () => removeItem(index);
+
+        controls.append(minus, quantityText, plus, remove);
+        row.append(icon, details, controls);
+        container.appendChild(row);
+      });
+
+      totalElement.textContent = "Grand Total: " + formatPrice(total);
+    }
+
+    function updateQuantity(index, change) {
+      const cart = getCart();
+      if (!cart[index]) return;
+
+      const quantity = (Number(cart[index].quantity) || 1) + change;
+
+      if (quantity <= 0) {
+        cart.splice(index, 1);
+      } else {
+        cart[index].quantity = quantity;
+      }
+
+      saveCart(cart);
+      renderCart();
+    }
+
+    function removeItem(index) {
+      const cart = getCart();
+      cart.splice(index, 1);
+      saveCart(cart);
+      renderCart();
+    }
+
+    document.getElementById("checkoutButton").addEventListener("click", () => {
+      if (getCart().length === 0) {
+        alert("Your cart is empty!");
+        return;
+      }
+
+      window.location.href = "/checkout.html";
+    });
+
+    renderCart();
+  </script>
+</body>
+</html>

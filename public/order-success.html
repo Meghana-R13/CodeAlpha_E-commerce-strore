@@ -1,0 +1,103 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Order Confirmed | M.STORE</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background: #0d0c0f;
+      color: #f7f1e8;
+      font-family: Arial, sans-serif;
+    }
+    .success {
+      max-width: 650px;
+      margin: 50px auto;
+      padding: 30px;
+      background: #171419;
+      border: 1px solid #4a304f;
+      border-radius: 14px;
+    }
+    h1, h2 { color: #d6b77a; }
+    .home {
+      display: inline-block;
+      padding: 12px 18px;
+      margin-top: 18px;
+      background: #d6b77a;
+      color: #0d0c0f;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .order-item {
+      padding: 10px 0;
+      border-bottom: 1px solid #4a304f;
+    }
+  </style>
+</head>
+<body>
+  <main class="success" id="content">
+    <h1>✓ Order Confirmed!</h1>
+    <p id="orderNumber"></p>
+    <p id="customer"></p>
+    <p id="phone"></p>
+    <p id="address"></p>
+    <h2>Items Ordered</h2>
+    <div id="items"></div>
+    <h2 id="total"></h2>
+    <p>Your order has been saved to the store database.</p>
+    <p>No payment has been processed; this is a demo checkout.</p>
+    <a class="home" href="/">Continue Shopping</a>
+  </main>
+
+  <script>
+    const content = document.getElementById("content");
+    let order = null;
+
+    try {
+      order = JSON.parse(
+        sessionStorage.getItem("codealphaLastOrder") || "null"
+      );
+    } catch {
+      order = null;
+    }
+
+    if (
+      !order ||
+      !order.orderNumber ||
+      !Array.isArray(order.items)
+    ) {
+      content.innerHTML = `
+        <h1>No recent order found</h1>
+        <p>Please return to the store to place an order.</p>
+        <a class="home" href="/">Continue Shopping</a>
+      `;
+    } else {
+      document.getElementById("orderNumber").textContent =
+        "Order ID: " + order.orderNumber;
+      document.getElementById("customer").textContent =
+        "Customer: " + order.name;
+      document.getElementById("phone").textContent =
+        "Mobile: " + order.phone;
+      document.getElementById("address").textContent =
+        "Delivery Address: " + order.address;
+
+      const itemsContainer = document.getElementById("items");
+
+      order.items.forEach(item => {
+        const row = document.createElement("p");
+        row.className = "order-item";
+        row.textContent =
+          `${item.name} × ${item.quantity} — ₹` +
+          Number(item.subtotal).toLocaleString("en-IN");
+        itemsContainer.appendChild(row);
+      });
+
+      document.getElementById("total").textContent =
+        "Grand Total: ₹" + Number(order.total).toLocaleString("en-IN");
+    }
+  </script>
+</body>
+</html>

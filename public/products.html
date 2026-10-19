@@ -1,0 +1,85 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Products | M.STORE</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    body {
+      background: #0d0c0f;
+      color: #f7f1e8;
+      font-family: Arial, sans-serif;
+    }
+    header {
+      padding: 20px 6%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      border-bottom: 1px solid #4a304f;
+    }
+    header h2 { color: #d6b77a; }
+    nav a {
+      color: #f7f1e8;
+      text-decoration: none;
+      margin-left: 12px;
+    }
+    .heading {
+      text-align: center;
+      padding: 30px 15px 10px;
+    }
+    .heading h1 { color: #d6b77a; }
+    #productGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 20px;
+      padding: 25px 6%;
+    }
+    .product-card {
+      background: #171419;
+      border: 1px solid #4a304f;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .product-image { font-size: 52px; }
+    .product-category { color: #d6b77a; }
+    .product-price { font-weight: bold; }
+    .product-card a { color: #d6b77a; text-decoration: none; }
+    .add-to-cart {
+      width: 100%;
+      padding: 11px;
+      background: #d6b77a;
+      color: #0d0c0f;
+      border: 0;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h2>M.STORE</h2>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/cart.html">Cart</a>
+      <a href="/login.html">Login</a>
+    </nav>
+  </header>
+
+  <section class="heading">
+    <h1>Our Products</h1>
+    <p>Find something you'll love.</p>
+  </section>
+
+  <main id="productGrid">
+    <p>Loading products...</p>
+  </main>
+
+  <script src="/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | M.STORE</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .auth-card { max-width: 430px; margin: 55px auto; padding: 28px;
+      border-radius: 18px; background: #fff; box-shadow: 0 8px 35px #0001; }
+    .auth-card h1 { margin-bottom: 8px; }
+    .auth-card label { display: block; margin-top: 16px; font-weight: 600; }
+    .auth-card input { width: 100%; padding: 12px; margin-top: 7px;
+      border: 1px solid #ddd; border-radius: 9px; box-sizing: border-box; }
+    .auth-card button { width: 100%; padding: 13px; margin-top: 22px;
+      border: 0; border-radius: 9px; cursor: pointer; font-weight: 700; }
+    #message { margin-top: 14px; }
+  </style>
+</head>
+<body>
+  <main class="auth-card">
+    <h1>Welcome back</h1>
+    <p>Log in to your M.STORE account.</p>
+
+    <form id="loginForm">
+      <label for="email">Email address</label>
+      <input id="email" name="email" type="email" required maxlength="254"
+        autocomplete="email">
+
+      <label for="password">Password</label>
+      <input id="password" name="password" type="password" required
+        maxlength="72" autocomplete="current-password">
+
+      <button type="submit">Log In</button>
+    </form>
+
+    <p id="message" role="status"></p>
+    <p>New here? <a href="registration.html">Create an account</a></p>
+    <a href="index.html">← Back to store</a>
+  </main>
+
+  <script>
+    const form = document.getElementById("loginForm");
+    const message = document.getElementById("message");
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      message.textContent = "Logging in...";
+
+      try {
+        const response = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: form.email.value.trim(),
+            password: form.password.value
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) throw new Error(data.message || "Login failed.");
+
+        message.textContent = "Login successful! Opening the store...";
+        window.location.href = "index.html";
+      } catch (error) {
+        message.textContent = error.message || "Could not connect to the server.";
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+
+<script>
+  const form = document.getElementById("registerForm");
+  const message = document.getElementById("message");
+
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+    message.textContent = "Creating your account...";
+
+    const button = form.querySelector('button[type="submit"]');
+    if (button) button.disabled = true;
+
+    try {
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          name: form.querySelector('[name="name"]').value.trim(),
+          email: form.querySelector('[name="email"]').value.trim(),
+          password: form.querySelector('[name="password"]').value
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Registration failed.");
+      }
+
+      message.textContent = "Registration successful! Opening the store...";
+      window.location.href = "/";
+    } catch (error) {
+      message.textContent =
+        error.message || "Could not connect to the server.";
+      if (button) button.disabled = false;
+    }
+  });
+</script>

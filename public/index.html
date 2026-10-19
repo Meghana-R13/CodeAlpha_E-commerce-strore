@@ -1,0 +1,163 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEGHANA | Modern Store</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="navbar">
+    <a href="/" class="logo">M<span>.</span>STORE</a>
+
+    <nav>
+        <a href="#home">Home</a>
+        <a href="#products">Products</a>
+        <a href="#features">Why Us</a>
+        <a href="/cart.html">Cart 🛒</a>
+
+        <span id="guestArea">
+            <a href="/login.html">Login</a>
+            <a href="/registration.html">Register</a>
+        </span>
+
+        <span id="userArea" style="display:none; align-items:center; gap:12px;">
+            <span id="userName"></span>
+            <a href="/my-orders.html">My Orders</a>
+            <a href="#" id="logoutLink">Logout</a>
+        </span>
+    </nav>
+
+    <a href="#products" class="cart-button">🛍️ Shop Now</a>
+</header>
+
+<main>
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <p class="eyebrow">THE EVERYDAY EDIT</p>
+            <h1>Find your next<br><span>favourite thing.</span></h1>
+            <p class="hero-description">
+                Thoughtfully selected essentials.
+                Exceptional style. A smarter way to shop.
+            </p>
+            <a href="#products" class="primary-button">Explore Collection ↗</a>
+            <div class="hero-note"><span>✦</span> YOUR STYLE. YOUR CHOICE.</div>
+        </div>
+
+        <div class="hero-art">
+            <div class="art-label">THE NEW COLLECTION</div>
+            <div class="art-circle"></div>
+            <div class="art-product">
+                <span>ESSENTIALS</span>
+                <h2>Good things.<br>Better choices.</h2>
+                <p>Curated for your everyday.</p>
+            </div>
+            <div class="art-number">01 / 04</div>
+        </div>
+    </section>
+
+    <section class="section" id="products">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">HANDPICKED FOR YOU</p>
+                <h2>Popular right now<span>.</span></h2>
+            </div>
+            <p class="section-note">Little upgrades. Big difference.</p>
+        </div>
+        <div class="product-grid" id="productGrid"></div>
+    </section>
+
+    <section class="features" id="features">
+        <div class="feature-intro">
+            <p class="eyebrow">THE M.STORE PROMISE</p>
+            <h2>Shopping should<br>feel <span>this good.</span></h2>
+        </div>
+
+        <div class="feature">
+            <span>01</span>
+            <h3>Thoughtful picks</h3>
+            <p>Useful everyday products selected with care.</p>
+        </div>
+
+        <div class="feature">
+            <span>02</span>
+            <h3>Simple shopping</h3>
+            <p>Find your favourites without the fuss.</p>
+        </div>
+
+        <div class="feature">
+            <span>03</span>
+            <h3>Clear pricing</h3>
+            <p>See product prices before making your choice.</p>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <a href="/" class="logo">M<span>.</span>STORE</a>
+    <p>Made for everyday living.</p>
+    <p>© 2026 M.Store</p>
+</footer>
+
+<script src="script.js"></script>
+
+<script>
+async function updateUserArea() {
+    const guestArea = document.getElementById("guestArea");
+    const userArea = document.getElementById("userArea");
+    const userName = document.getElementById("userName");
+    const logoutLink = document.getElementById("logoutLink");
+
+    try {
+        const response = await fetch("/api/me", {
+            credentials: "same-origin"
+        });
+
+        if (!response.ok) {
+            throw new Error("Unable to check login status");
+        }
+
+        const data = await response.json();
+
+        if (data.user) {
+            guestArea.style.display = "none";
+            userArea.style.display = "inline-flex";
+            userName.textContent = "Hi, " + data.user.name + "!";
+        } else {
+            guestArea.style.display = "inline-flex";
+            userArea.style.display = "none";
+        }
+    } catch (error) {
+        console.error("Login status error:", error);
+        guestArea.style.display = "inline-flex";
+        userArea.style.display = "none";
+    }
+
+    logoutLink.addEventListener("click", async function(event) {
+        event.preventDefault();
+
+        try {
+            const response = await fetch("/api/logout", {
+                method: "POST",
+                credentials: "same-origin"
+            });
+
+            if (!response.ok) {
+                throw new Error("Logout request failed");
+            }
+
+            window.location.href = "/";
+        } catch (error) {
+            console.error("Logout error:", error);
+            alert("Unable to log out. Please try again.");
+        }
+    });
+}
+
+updateUserArea();
+</script>
+
+</body>
+</html>

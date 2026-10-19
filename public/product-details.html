@@ -1,0 +1,312 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Details | M.STORE</title>
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    .details-page {
+      max-width: 1000px;
+      margin: 45px auto;
+      padding: 20px;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-bottom: 25px;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .details-card {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 35px;
+      align-items: center;
+      padding: 30px;
+      border-radius: 20px;
+      background: #fff;
+      box-shadow: 0 10px 35px #00000012;
+    }
+
+    .details-image {
+      min-height: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f7f1e8;
+      border-radius: 16px;
+      font-size: 110px;
+    }
+
+    .details-category {
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 12px;
+      color: #71856a;
+      font-weight: 700;
+    }
+
+    .details-name {
+      font-size: 32px;
+      margin: 12px 0;
+    }
+
+    .details-price {
+      font-size: 26px;
+      font-weight: 800;
+      margin: 18px 0;
+    }
+
+    .details-description {
+      line-height: 1.8;
+      color: #666;
+    }
+
+    .quantity-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 24px 0;
+    }
+
+    .quantity-row input {
+      width: 75px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+
+    .details-button {
+      padding: 13px 22px;
+      border: none;
+      border-radius: 9px;
+      background: #d6b77a;
+      color: #17130e;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .details-button:hover {
+      opacity: 0.85;
+    }
+
+    .details-message {
+      margin-top: 15px;
+      min-height: 24px;
+    }
+
+    .not-found {
+      text-align: center;
+      padding: 50px 15px;
+    }
+
+    @media (max-width: 650px) {
+      .details-card {
+        grid-template-columns: 1fr;
+        padding: 18px;
+      }
+
+      .details-image {
+        min-height: 220px;
+        font-size: 85px;
+      }
+
+      .details-name {
+        font-size: 25px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="details-page">
+    <a class="back-link" href="index.html#products">
+      ← Back to Products
+    </a>
+
+    <div id="productDetails">
+      <p>Loading product details...</p>
+    </div>
+  </main>
+
+  <script>
+    const detailsContainer = document.getElementById("productDetails");
+
+    let currentProduct = null;
+
+    function formatPrice(price) {
+      return "₹" + Number(price).toLocaleString("en-IN");
+    }
+
+    async function loadProductDetails() {
+      const params = new URLSearchParams(window.location.search);
+      const productId = Number(params.get("id"));
+
+      if (!Number.isSafeInteger(productId) || productId < 1) {
+        showNotFound();
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/products");
+
+        if (!response.ok) {
+          throw new Error("Unable to load products.");
+        }
+
+        const products = await response.json();
+
+        currentProduct = products.find(
+          product => Number(product.id) === productId
+        );
+
+        if (!currentProduct) {
+          showNotFound();
+          return;
+        }
+
+        detailsContainer.innerHTML = `
+          <section class="details-card">
+            <div class="details-image" aria-hidden="true">
+              ${currentProduct.icon}
+            </div>
+
+            <div>
+              <p class="details-category">
+                ${escapeHTML(currentProduct.category)}
+              </p>
+
+              <h1 class="details-name">
+                ${escapeHTML(currentProduct.name)}
+              </h1>
+
+              <p class="details-price">
+                ${formatPrice(currentProduct.price)}
+              </p>
+
+              <p class="details-description">
+                Explore the ${escapeHTML(currentProduct.name)} at M.STORE.
+                A great addition to your everyday essentials.
+              </p>
+
+              <div class="quantity-row">
+                <label for="quantity">Quantity</label>
+                <input
+                  id="quantity"
+                  type="number"
+                  min="1"
+                  max="99"
+                  value="1"
+                  step="1"
+                >
+              </div>
+
+              <button class="details-button" id="addButton">
+                Add to Cart 🛒
+              </button>
+
+              <p class="details-message" id="detailsMessage"
+                 role="status"></p>
+            </div>
+          </section>
+        `;
+
+        document.getElementById("addButton").addEventListener(
+          "click",
+          addProductToCart
+        );
+      } catch (error) {
+        detailsContainer.innerHTML = `
+          <div class="not-found">
+            <h2>Unable to load product</h2>
+            <p>Please check your connection and refresh the page.</p>
+            <a href="index.html#products">Return to Products</a>
+          </div>
+        `;
+      }
+    }
+
+    function escapeHTML(value) {
+      return String(value).replace(/[&<>"']/g, character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      })[character]);
+    }
+
+    function showNotFound() {
+      detailsContainer.innerHTML = `
+        <div class="not-found">
+          <h2>Product not found</h2>
+          <p>This product may no longer be available.</p>
+          <a href="index.html#products">Browse all products</a>
+        </div>
+      `;
+    }
+
+    function addProductToCart() {
+      if (!currentProduct) return;
+
+      const quantityInput = document.getElementById("quantity");
+      const quantity = Number(quantityInput.value);
+      const message = document.getElementById("detailsMessage");
+
+      if (
+        !Number.isSafeInteger(quantity) ||
+        quantity < 1 ||
+        quantity > 99
+      ) {
+        message.textContent = "Choose a quantity between 1 and 99.";
+        return;
+      }
+
+      try {
+        const cart = JSON.parse(
+          localStorage.getItem("codealphaCart") || "[]"
+        );
+
+        if (!Array.isArray(cart)) {
+          throw new Error("Invalid cart data.");
+        }
+
+        const existing = cart.find(
+          item => Number(item.id) === Number(currentProduct.id)
+        );
+
+        if (existing) {
+          const newQuantity = Number(existing.quantity || 1) + quantity;
+
+          if (newQuantity > 99) {
+            message.textContent =
+              "Maximum quantity for one product is 99.";
+            return;
+          }
+
+          existing.quantity = newQuantity;
+        } else {
+          cart.push({
+            ...currentProduct,
+            quantity: quantity
+          });
+        }
+
+        localStorage.setItem("codealphaCart", JSON.stringify(cart));
+
+        message.textContent =
+          currentProduct.name + " added to your cart!";
+      } catch (error) {
+        message.textContent =
+          "Unable to update your cart. Please try again.";
+      }
+    }
+
+    loadProductDetails();
+  </script>
+</body>
+</html>
