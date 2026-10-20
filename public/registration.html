@@ -1,39 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account - M-Store</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="auth-container">
+    <h1>Create Account</h1>
 
-<script>
-  const form = document.getElementById("registerForm");
-  const message = document.getElementById("message");
+    <form id="registerForm">
+      <input
+        type="text"
+        name="name"
+        placeholder="Full name"
+        required
+      ><br>
 
-  form.addEventListener("submit", async event => {
-    event.preventDefault();
-    message.textContent = "Creating your account...";
+      <input
+        type="email"
+        name="email"
+        placeholder="Email address"
+        required
+      ><br>
 
-    const button = form.querySelector('button[type="submit"]');
-    if (button) button.disabled = true;
+      <input
+        type="password"
+        name="password"
+        placeholder="Password"
+        required
+      ><br>
 
-    try {
-      const response = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({
-          name: form.querySelector('[name="name"]').value.trim(),
-          email: form.querySelector('[name="email"]').value.trim(),
-          password: form.querySelector('[name="password"]').value
-        })
-      });
+      <button type="submit">Register</button>
+    </form>
 
-      const data = await response.json();
+    <p id="message"></p>
+    <p>Already have an account? <a href="login.html">Login</a></p>
+  </main>
 
-      if (!response.ok) {
-        throw new Error(data.message || "Registration failed.");
-      }
-
-      message.textContent = "Registration successful! Opening the store...";
-      window.location.href = "/";
-    } catch (error) {
-      message.textContent =
-        error.message || "Could not connect to the server.";
-      if (button) button.disabled = false;
-    }
-  });
-</script>
+  <!-- Paste the registration script here, just before closing body tag -->
+</body>
+</html>
